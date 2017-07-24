@@ -7,7 +7,7 @@ void LatticeBinomialSerial::calcAmericanPrice(double curPrice,
                                               int level,
                                               int multiplier) {
  if (timeSteps == 0) {
-   cache[timeSteps][level] = std::max(multiplier * (curPrice - strikePrice), 0.0);
+   cache[timeSteps][level] = max(multiplier * (curPrice - strikePrice), 0.0);
  } else {
    int newTimeSteps = timeSteps - 1;
    int u_level = level + 1;
@@ -21,7 +21,7 @@ void LatticeBinomialSerial::calcAmericanPrice(double curPrice,
    double v_u = cache[newTimeSteps][u_level];
    double v_d = cache[newTimeSteps][level];
 
-   cache[timeSteps][level] = std::max((p_u * v_u + (1 - p_u) * v_d) *
+   cache[timeSteps][level] = max((p_u * v_u + (1 - p_u) * v_d) *
                                   exp(-riskFree * delta),
                                   multiplier * (curPrice - strikePrice));
  }
