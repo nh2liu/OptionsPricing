@@ -2,6 +2,8 @@
 #include <math.h>
 using namespace std;
 
+enum class OptionType {American, European};
+
 class lattice_model_serial {
 private:
   double start_price;
@@ -14,25 +16,26 @@ private:
   double p_u;
 
   double ** cache;
-  double calc_price(double cur_price,
-                    int time_steps,
-                    int level) {
+  void calc_european_price(double cur_price,
+                           int time_steps,
+                           int level) {
     if (time_steps == 0) {
-      return max(cur_price - strike_price, 0.0);
+      cache[time_steps][level] = max(cur_price - strike_price, 0.0);
     } else {
       int new_timesteps = time_steps - 1;
       int u_level = level + 1;
 
       if (cache[new_timesteps][u_level] == -1) {
-        cache[new_timesteps][u_level] = calc_price(cur_price * u, new_timesteps, u_level);
+        calc_european_price(cur_price * u, new_timesteps, u_level);
       }
       if (cache[new_timesteps][level] == -1) {
-        cache[new_timesteps][level] = calc_price(cur_price / u, new_timesteps, level);
+        calc_european_price(cur_price / u, new_timesteps, level);
       }
       double v_u = cache[new_timesteps][u_level];
       double v_d = cache[new_timesteps][level];
 
-      return (p_u * v_u + (1 - p_u) * v_d) * exp(-risk_free * delta);
+      cache[time_steps][level] = (p_u * v_u + (1 - p_u) * v_d) *
+                                 exp(-risk_free * delta);
     }
   }
 public:
@@ -58,8 +61,10 @@ public:
     delta = time_to_expiry / time_steps;
     u = exp(vol * sqrt(delta));
     p_u = (exp(risk_free * delta) - 1/u) / (u - 1/u);
+    
+    calc_european_price(start_price, time_steps, 0);
 
-    double p = calc_price(start_price, time_steps, 0);
+    double p = cache[time_steps][0];
 
     for (int i = 0; i < cache_dim; ++i) delete[] cache[i];
     delete[] cache;
@@ -69,10 +74,18 @@ public:
 };
 
 int main() {
-  lattice_model_serial test(100, 100, 1.5, 0.12, 0.05);
-  int t;
+  double price;
+  double strike;
+  double tte;
+  double vol;
+  double r;
+  cout << "Enter: Current Price, Strike, Time To Expiry, Vol, Risk-Free Rate" << endl;
+  cin >> price >> strike >> tte >> vol >> r;
+
+  lattice_model_serial test(price, strike, tte, vol, r);
   while (true) {
     cout << "Enter timesteps: ";
+    int t;
     cin >> t;
     cout << test.price(t) << endl;
   }
