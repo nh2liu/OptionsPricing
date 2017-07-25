@@ -1,5 +1,5 @@
 #folder
-execs/*
+/execs/*
 # Prerequisites
 *.d
 
