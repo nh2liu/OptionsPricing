@@ -2,68 +2,10 @@
 #include "lattice_binomial.h"
 using namespace std;
 
-void LatticeBinomialSerial::calcAmericanPrice(double curPrice,
-                                              int timeSteps,
-                                              int level,
-                                              int multiplier) {
- if (timeSteps == 0) {
-   cache[timeSteps][level] = max(multiplier * (curPrice - strikePrice), 0.0);
- } else {
-   int newTimeSteps = timeSteps - 1;
-   int u_level = level + 1;
-
-   if (cache[newTimeSteps][u_level] == -1) {
-     calcAmericanPrice(curPrice * u, newTimeSteps, u_level, multiplier);
-   }
-   if (cache[newTimeSteps][level] == -1) {
-     calcAmericanPrice(curPrice / u, newTimeSteps, level, multiplier);
-   }
-   double v_u = cache[newTimeSteps][u_level];
-   double v_d = cache[newTimeSteps][level];
-
-   cache[timeSteps][level] = max((p_u * v_u + (1 - p_u) * v_d) *
-                                  exp(-riskFree * delta),
-                                  multiplier * (curPrice - strikePrice));
- }
-}
-
-void LatticeBinomialSerial::calcEuropeanPrice(double curPrice,
-                                              int timeSteps,
-                                              int level,
-                                              int multiplier) {
-  if (timeSteps == 0) {
-    cache[timeSteps][level] = max(multiplier * (curPrice - strikePrice), 0.0);
-  } else {
-    int newTimeSteps = timeSteps - 1;
-    int u_level = level + 1;
-
-    if (cache[newTimeSteps][u_level] == -1) {
-      calcEuropeanPrice(curPrice * u, newTimeSteps, u_level, multiplier);
-    }
-    if (cache[newTimeSteps][level] == -1) {
-      calcEuropeanPrice(curPrice / u, newTimeSteps, level, multiplier);
-    }
-    double v_u = cache[newTimeSteps][u_level];
-    double v_d = cache[newTimeSteps][level];
-
-    cache[timeSteps][level] = (p_u * v_u + (1 - p_u) * v_d) *
-                               exp(-riskFree * delta);
-  }
-}
-
-LatticeBinomialSerial::LatticeBinomialSerial(double startPrice,
-                                             double strikePrice,
-                                             double timeToExpiry,
-                                             double vol,
-                                             double riskFree):
-startPrice{startPrice}, strikePrice{strikePrice}, timeToExpiry{timeToExpiry},
-vol{vol}, riskFree{riskFree}, cache{nullptr} {}
-
-double LatticeBinomialSerial::calcPrice(OptionStyle ostyle,
-                                        OptionType otype,
-                                        int timeSteps) {
-    // establishing cache for option prices
+LatticeBinomialSerial::LatticeBinomialSerial(int timeSteps) : AbstractValuation(), timeSteps{timeSteps} {
+  // establishing cache for option prices
   int cache_dim = timeSteps + 1;
+
   cache = new double * [cache_dim];
   for (int i = 0; i < cache_dim; ++i) {
     cache[i] = new double[cache_dim];
@@ -71,25 +13,114 @@ double LatticeBinomialSerial::calcPrice(OptionStyle ostyle,
       cache[i][j] = -1;
     }
   }
+}
 
+LatticeBinomialSerial::~LatticeBinomialSerial() {
+  // resetting cache
+  int cache_dim = timeSteps + 1;
+  for (int i = 0; i < cache_dim; ++i) delete[] cache[i];
+  delete[] cache;
+}
+
+void LatticeBinomialSerial::calcAmericanPrice(double riskFree,
+                                              double strikePrice,
+                                              double priceAtCurStep,
+                                              double delta,
+                                              double u,
+                                              double p_u,
+                                              int currentStep,
+                                              int level,
+                                              int callPutModifier) {
+ if (currentStep == 0) {
+   cache[currentStep][level] = max(callPutModifier * (priceAtCurStep - strikePrice), 0.0);
+ } else {
+   int newStep = currentStep - 1;
+   int u_level = level + 1;
+
+   if (cache[newStep][u_level] == -1) {
+     calcAmericanPrice(riskFree, strikePrice, priceAtCurStep * u, delta, u, p_u, newStep, u_level, callPutModifier);
+   }
+   if (cache[newStep][level] == -1) {
+     calcAmericanPrice(riskFree, strikePrice, priceAtCurStep / u, delta, u, p_u, newStep, level, callPutModifier);
+   }
+   double v_u = cache[newStep][u_level];
+   double v_d = cache[newStep][level];
+
+   cache[currentStep][level] = max((p_u * v_u + (1 - p_u) * v_d) *
+                                  exp(-riskFree * delta),
+                                  callPutModifier * (priceAtCurStep - strikePrice));
+ }
+}
+
+void LatticeBinomialSerial::calcEuropeanPrice(double riskFree,
+                                              double strikePrice,
+                                              double priceAtCurStep,
+                                              double delta,
+                                              double u,
+                                              double p_u,
+                                              int currentStep,
+                                              int level,
+                                              int callPutModifier) {
+ if (currentStep == 0) {
+   cache[currentStep][level] = max(callPutModifier * (priceAtCurStep - strikePrice), 0.0);
+ } else {
+   int newStep = currentStep - 1;
+   int u_level = level + 1;
+
+   if (cache[newStep][u_level] == -1) {
+      calcEuropeanPrice(riskFree, strikePrice, priceAtCurStep * u, delta, u, p_u, newStep, u_level, callPutModifier);
+   }
+   if (cache[newStep][level] == -1) {
+      calcEuropeanPrice(riskFree, strikePrice, priceAtCurStep / u, delta, u, p_u, newStep, level, callPutModifier);
+   }
+   double v_u = cache[newStep][u_level];
+   double v_d = cache[newStep][level];
+
+   cache[currentStep][level] = (p_u * v_u + (1 - p_u) * v_d) *
+                                  exp(-riskFree * delta);
+ }
+}
+
+
+
+double LatticeBinomialSerial::calcPrice(Option & opt) {
   // setting up option variables.
-  delta = timeToExpiry / timeSteps;
-  u = exp(vol * sqrt(delta));
-  p_u = (exp(riskFree * delta) - 1/u) / (u - 1/u);
+  double delta = opt.timeToExpiry / timeSteps;
+  double u = exp(opt.vol * sqrt(delta));
+  double p_u = (exp(opt.riskFree * delta) - 1/u) / (u - 1/u);
 
-  int multiplier = otype == OptionType::Call ? 1 : -1;
+  int callPutModifier = opt.otype == OptionType::Call ? 1 : -1;
+
   // determining which type to call
-  if (ostyle == OptionStyle::European) {
-    calcEuropeanPrice(startPrice, timeSteps, 0, multiplier);
-  } else if (ostyle == OptionStyle::American) {
-    calcAmericanPrice(startPrice, timeSteps, 0, multiplier);
+  if (opt.ostyle == OptionStyle::European) {
+    calcEuropeanPrice(opt.riskFree,
+                      opt.strikePrice,
+                      opt.startPrice,
+                      delta,
+                      u,
+                      p_u,
+                      timeSteps,
+                      0,
+                      callPutModifier);
+  } else if (opt.ostyle == OptionStyle::American) {
+    calcAmericanPrice(opt.riskFree,
+                      opt.strikePrice,
+                      opt.startPrice,
+                      delta,
+                      u,
+                      p_u,
+                      timeSteps,
+                      0,
+                      callPutModifier);
   }
 
   double p = cache[timeSteps][0];
-
-  // resetting cache
-  for (int i = 0; i < cache_dim; ++i) delete[] cache[i];
-  delete[] cache;
-
+  
+  int cache_dim = timeSteps + 1;
+  for (int i = 0; i < cache_dim; ++i) {
+    for (int j = 0; j < cache_dim; ++j) {
+      cache[i][j] = -1;
+    }
+  }
   return p;
 };

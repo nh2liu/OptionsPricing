@@ -1,6 +1,7 @@
 #include <iostream>
 #include "serial_binomial/lattice_binomial.h"
 #include "option_enum.h"
+#include "option.h"
 
 using namespace std;
 
@@ -37,11 +38,13 @@ int main() {
     otype = OptionType :: Put;
   }
 
-  LatticeBinomialSerial test(price, strike, tte, vol, r);
+  Option opt(ostyle, otype, price, strike, tte, vol, r);
+
   cout << "Timesteps: " << endl;
   int t;
   while (cin >> t) {
     cout << "t: " << t << endl;
-    cout << test.calcPrice(ostyle, otype, t) << endl;
+    LatticeBinomialSerial bVal(t);
+    cout << bVal.calcPrice(opt) << endl;
   }
 }

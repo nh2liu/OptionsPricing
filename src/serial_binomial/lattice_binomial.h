@@ -1,43 +1,41 @@
-#ifndef LATTICE_BINOMIAL_H
-#define LATTICE_BINOMIAL_H
+#ifndef __LATTICE_BINOMIAL_H__
+#define __LATTICE_BINOMIAL_H__
 
 #include "../option_enum.h"
-
+#include "../AbstractValuation.h"
+#include "../option.h"
 
 // this contains serial implmentation of lattice model
-class LatticeBinomialSerial {
+class LatticeBinomialSerial : public AbstractValuation {
 private:
-  double startPrice;
-  double strikePrice;
-  double timeToExpiry;
-  double vol;
-  double riskFree;
-  double delta;
-  double u;
-  double p_u;
-
   double ** cache;
+  int timeSteps;
 
-  void calcAmericanPrice(double curPrice,
-                         int timeSteps,
+  void calcEuropeanPrice(double riskFree,
+                         double strikePrice,
+                         double priceAtCurStep,
+                         double delta,
+                         double u,
+                         double p_u,
+                         int currentStep,
                          int level,
-                         int multiplier);
+                         int callPutModifier);
 
- void calcEuropeanPrice(double curPrice,
-                        int timeSteps,
-                        int level,
-                        int multiplier);
-
+  void calcAmericanPrice(double riskFree,
+                         double strikePrice,
+                         double priceAtCurStep,
+                         double delta,
+                         double u,
+                         double p_u,
+                         int currentStep,
+                         int level,
+                         int callPutModifier);
 public:
-  LatticeBinomialSerial(double startPrice,
-                     double strikePrice,
-                     double timeToExpiry,
-                     double vol,
-                     double riskFree);
+  LatticeBinomialSerial(int timeSteps);
+  ~LatticeBinomialSerial();
 
-  double calcPrice(OptionStyle ostyle,
-                   OptionType otype,
-                   int time_steps = 100);
+  double calcPrice(Option & opt);
+
 };
 
 #endif
