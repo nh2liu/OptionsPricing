@@ -27,10 +27,10 @@ while [ $counter -lt $numberOfOptions ]; do
 
 	strikeAway=$(( ( RANDOM % 9 )  - 4 ))
 	strike=$(bc <<< "scale=2; $(bc <<< "scale=0; $curPrice/$strikeGap + $strikeAway") * $strikeGap")
-	
+	tte=$(rng 3 0.1)
 	vol=$(bc <<< "scale=2; $(rng 25 5) / 100")
 	r=$(bc <<< "scale=3; $(rng 7 0) / 100")
-	echo $curPrice $strike $vol $r $(rndArg a e) $(rndArg c p)
+	echo $curPrice $strike $tte $vol $r $(rndArg a e) $(rndArg c p)
 
 	let counter=counter+1
 done
