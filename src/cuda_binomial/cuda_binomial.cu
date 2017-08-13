@@ -1,6 +1,7 @@
 #include <algorithm>
 #include "cuda_binomial.cuh"
 #include "../option_enum.h"
+#include <iostream>
 using namespace std;
 
 __global__
@@ -78,9 +79,9 @@ double LatticeBinomialCuda::calcPrice(Option & opt) {
                                                        opt.riskFree, delta, u, p_u, d_cache, callPutModifier);    
   }
 
-  double * finalPrice = nullptr;
-  cudaMemcpy(finalPrice, d_cache,  sizeof(double), cudaMemcpyDeviceToHost);
+  double finalPrice;
+  cudaMemcpy(&finalPrice, d_cache,  sizeof(double), cudaMemcpyDeviceToHost);
   cudaFree(d_cache);
-
-  return *finalPrice;
+  
+  return finalPrice;
 }

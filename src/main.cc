@@ -1,5 +1,6 @@
 #include <iostream>
 #include "serial_binomial/lattice_binomial.h"
+#include "cuda_binomial/cuda_binomial.cuh"
 #include "option_enum.h"
 #include "option.h"
 
@@ -44,7 +45,10 @@ int main() {
   int t;
   while (cin >> t) {
     cout << "t: " << t << endl;
-    LatticeBinomialSerial bVal(t);
-    cout << bVal.calcPrice(opt) << endl;
+    LatticeBinomialSerial bValSerial(t);
+    cout << bValSerial.calcPrice(opt) << endl;
+
+    LatticeBinomialCuda bValCuda(t);
+    cout << bValCuda.calcPrice(opt) << endl;
   }
 }
