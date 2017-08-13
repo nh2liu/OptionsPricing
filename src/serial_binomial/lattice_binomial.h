@@ -1,7 +1,6 @@
 #ifndef __LATTICE_BINOMIAL_H__
 #define __LATTICE_BINOMIAL_H__
 
-#include "../option_enum.h"
 #include "../AbstractValuation.h"
 #include "../option.h"
 

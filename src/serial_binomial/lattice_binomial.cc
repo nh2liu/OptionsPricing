@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "lattice_binomial.h"
+#include "../option_enum.h"
 using namespace std;
 
 LatticeBinomialSerial::LatticeBinomialSerial(int timeSteps) : AbstractValuation(), timeSteps{timeSteps} {
