@@ -1,6 +1,7 @@
 #include <iostream>
 #include "serial_binomial/lattice_binomial.h"
 #include "cuda_binomial/cuda_binomial.cuh"
+#include "serial_montecarlo/serial_montecarlo.h"
 #include "option_enum.h"
 #include "option.h"
 
@@ -22,9 +23,12 @@ int main() {
   if (ostyle_str == 'e') {
     cout << "European option selected." << endl;
     ostyle = OptionStyle :: European;
-  } else {
+  } else if (ostyle_str == 'a') {
     cout << "American option selected." << endl;
     ostyle = OptionStyle :: American;
+  } else if (ostyle_str == 's') {
+    cout << "Asian option selected." << endl;
+    ostyle = OptionStyle :: Asian;
   }
 
   cout << "Enter: c or p." << endl;
@@ -50,5 +54,8 @@ int main() {
 
     LatticeBinomialCuda bValCuda(t);
     cout << bValCuda.calcPrice(opt) << endl;
+
+    MonteCarloSerial bValMonteCarloSerial(t, 10000);
+    cout << bValMonteCarloSerial.calcPrice(opt) << endl;
   }
 }
