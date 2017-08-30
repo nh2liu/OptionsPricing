@@ -64,7 +64,7 @@ int main() {
     chrono::steady_clock::time_point end= chrono::steady_clock::now();
     cout << "t=" << chrono::duration_cast<chrono::microseconds>(end - begin).count() <<endl;
   }
-
+  
   for (AbstractValuation * AV : oVals) {
     delete AV;
   }

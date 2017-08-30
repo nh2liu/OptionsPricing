@@ -2,6 +2,7 @@
 #include "serial_binomial/lattice_binomial.h"
 #include "cuda_binomial/cuda_binomial.cuh"
 #include "serial_montecarlo/serial_montecarlo.h"
+#include "cuda_montecarlo/cuda_montecarlo.cuh"
 #include "option_enum.h"
 #include "option.h"
 
@@ -57,5 +58,8 @@ int main() {
 
     MonteCarloSerial bValMonteCarloSerial(t, 10000);
     cout << bValMonteCarloSerial.calcPrice(opt) << endl;
+
+    MonteCarloCuda bValMonteCarloCuda(t, 10000);
+    cout << bValMonteCarloCuda.calcPrice(opt) << endl;
   }
 }
