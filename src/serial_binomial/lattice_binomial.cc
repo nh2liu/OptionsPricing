@@ -3,7 +3,7 @@
 #include "../option_enum.h"
 using namespace std;
 
-LatticeBinomialSerial::LatticeBinomialSerial(int timeSteps) : AbstractValuation(), timeSteps{timeSteps} {
+LatticeBinomialSerial::LatticeBinomialSerial(int timeSteps) : AbstractValuation("LatticeSerial"), timeSteps{timeSteps} {
   // establishing cache for option prices
   int cache_dim = timeSteps + 1;
 

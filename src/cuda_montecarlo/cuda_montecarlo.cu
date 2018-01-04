@@ -85,7 +85,7 @@ __global__ void pricePathEuropean(double riskFree,
   reduceSum(idx, pathPrices, finalPrice);
 }
 
-MonteCarloCuda::MonteCarloCuda(int timeSteps, int numOfPaths) : AbstractValuation(),
+MonteCarloCuda::MonteCarloCuda(int timeSteps, int numOfPaths) : AbstractValuation("MonteCarloCuda"),
 timeSteps{timeSteps}, numOfPaths{numOfPaths} {
   cudaMalloc(&devStates, numOfPaths * sizeof(curandState));
   initRand<<<(numOfPaths + 255)/256, 256>>>(1, devStates);

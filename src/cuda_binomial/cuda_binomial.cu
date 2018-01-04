@@ -2,6 +2,7 @@
 #include "cuda_binomial.cuh"
 #include "../option_enum.h"
 #include <iostream>
+
 using namespace std;
 
 __global__
@@ -18,15 +19,20 @@ void calcEuropeanOption(int timeSteps,
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i > timeSteps) return;
   int colDim = timeSteps + 1;
-
+  
   cache[timeSteps * colDim + i] = max(callPutModifier * (startPrice * pow(u, 2 * i - timeSteps) - strikePrice), 0.0);
   timeSteps--;
 
   while (timeSteps >= i) {
+    __syncthreads();
     cache[timeSteps * colDim + i] = (p_u * cache[(timeSteps + 1) * colDim + i + 1] +
                                     (1 - p_u) * cache[(timeSteps + 1) * colDim + i ]) * exp(-riskFree * delta);
     timeSteps--;
-    __syncthreads();
+
+    // new gpu doesn't syncthreads properly?? need to investigate
+    for (int j = 0; j < 100; ++j) {
+      cache[1] += 0.0001;
+    }
   }
 }
 
@@ -47,17 +53,18 @@ void calcAmericanOption(int timeSteps,
 
   cache[timeSteps * colDim + i] = max(callPutModifier * (startPrice * pow(u, 2 * i - timeSteps) - strikePrice), 0.0);
   timeSteps--;
+  
 
   while (timeSteps >= i) {
+    __syncthreads();
     cache[timeSteps * colDim + i] = max((p_u * cache[(timeSteps + 1) * colDim + i + 1] +
                                         (1 - p_u) * cache[(timeSteps + 1) * colDim + i ]) * exp(-riskFree * delta),
                                         callPutModifier * (startPrice * pow(u, 2 * i - timeSteps) - strikePrice));
     timeSteps--;
-    __syncthreads();
   }
 }
 
-LatticeBinomialCuda::LatticeBinomialCuda(int timeSteps) : AbstractValuation(), timeSteps{timeSteps} {}
+LatticeBinomialCuda::LatticeBinomialCuda(int timeSteps) : AbstractValuation("LatticeCuda"), timeSteps{timeSteps} {}
 
 LatticeBinomialCuda::~LatticeBinomialCuda() {}
 
@@ -81,7 +88,7 @@ double LatticeBinomialCuda::calcPrice(Option & opt) {
 
   double finalPrice;
   cudaMemcpy(&finalPrice, d_cache,  sizeof(double), cudaMemcpyDeviceToHost);
+
   cudaFree(d_cache);
-  
   return finalPrice;
 }

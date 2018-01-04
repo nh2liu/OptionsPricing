@@ -8,6 +8,11 @@
 
 using namespace std;
 
+// module to price single options using
+// all the valuation methods
+// note that this is not hard tested and  montecarlo will produce out-of-bounds for 
+// american style options
+
 int main() {
   double price;
   double strike;
@@ -48,18 +53,17 @@ int main() {
 
   cout << "Timesteps: " << endl;
   int t;
-  while (cin >> t) {
-    cout << "t: " << t << endl;
-    LatticeBinomialSerial bValSerial(t);
-    cout << bValSerial.calcPrice(opt) << endl;
+  cin >> t;
+  cout << "t: " << t << endl;
+  LatticeBinomialSerial bValSerial(t);
+  cout << bValSerial.calcPrice(opt) << endl;
 
-    LatticeBinomialCuda bValCuda(t);
-    cout << bValCuda.calcPrice(opt) << endl;
+  LatticeBinomialCuda bValCuda(t);
+  cout << bValCuda.calcPrice(opt) << endl;
 
-    MonteCarloSerial bValMonteCarloSerial(t, 10000);
-    cout << bValMonteCarloSerial.calcPrice(opt) << endl;
+  MonteCarloSerial bValMonteCarloSerial(t, 10000);
+  cout << bValMonteCarloSerial.calcPrice(opt) << endl;
 
-    MonteCarloCuda bValMonteCarloCuda(t, 10000);
-    cout << bValMonteCarloCuda.calcPrice(opt) << endl;
-  }
+  MonteCarloCuda bValMonteCarloCuda(t, 10000);
+  cout << bValMonteCarloCuda.calcPrice(opt) << endl;
 }

@@ -50,7 +50,7 @@ double MonteCarloSerial::calcEuropeanPrice(double riskFree,
     return cumulativeSum / numOfPaths;
  }
 
-MonteCarloSerial::MonteCarloSerial(int timeSteps, int numOfPaths) : AbstractValuation(),
+MonteCarloSerial::MonteCarloSerial(int timeSteps, int numOfPaths) : AbstractValuation("MonteCarloSerial"),
 timeSteps{timeSteps}, numOfPaths{numOfPaths} {}
 
 MonteCarloSerial::~MonteCarloSerial() {}
